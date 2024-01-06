@@ -1,31 +1,26 @@
 package project.doc.dmc_security_api.entity;
 
-import jakarta.persistence.Id;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Data
+
 @Entity
 @Table(name = "user_role", schema = "user_management")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserRole {
 
     @Id
     @GeneratedValue
-    @Column(name = "id")
-    UUID id;
-
-    @ManyToOne
-    @JoinColumn(name = "username")
-    User user;
-
-    @ManyToOne
-    @JoinColumn(name = "role_name")
-    Role role;
+    private UUID id;
+    @Column(name = "username",nullable = false
+    )
+    private String userName;
+    @Column(name = "role_name",nullable = false)
+    private String roleName;
 }
