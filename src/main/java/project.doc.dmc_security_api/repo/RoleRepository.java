@@ -4,9 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import project.doc.dmc_security_api.entity.Role;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, UUID> {
-    Role findByroleName(String roleName);
+    Role findByRoleName(String roleName);
+    Boolean existsByRoleName(String roleName);
+    Optional<Role> findByRoleId(UUID uuid);
 }

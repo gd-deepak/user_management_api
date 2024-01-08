@@ -14,5 +14,5 @@ public class UserContract {
     String email;
     String password;
     Boolean isActive;
-    Role role;
+    RoleContract role;
 }

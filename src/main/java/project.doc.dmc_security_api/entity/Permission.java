@@ -1,16 +1,22 @@
 package project.doc.dmc_security_api.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Column;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import project.doc.dmc_security_api.constants.AuditTable;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "permission", schema = "user_management")
-public class Permission {
-
+@Data
+public class Permission extends AuditTable<String> {
     @Id
     @GeneratedValue
     @Column(name = "id")

@@ -32,10 +32,7 @@ import project.doc.dmc_security_api.service.UserService;
 import java.util.List;
 
 @Slf4j
-@Api(
-        value = "dmc_security_api",
-        tags = {"User"}
-)
+@Api(value = "dmc_security_api",tags = {"User"})
 @RestController
 @RequestMapping({"/user"})
 @CrossOrigin({"http://localhost:3000", "*"})

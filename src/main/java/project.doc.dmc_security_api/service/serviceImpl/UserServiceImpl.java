@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import project.doc.dmc_security_api.constants.AuditTableAttribute;
+import project.doc.dmc_security_api.contract.RoleContract;
 import project.doc.dmc_security_api.contract.UserContract;
 import project.doc.dmc_security_api.entity.Role;
 import project.doc.dmc_security_api.entity.User;
@@ -69,32 +70,41 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<JsonNode> findUsers() throws JsonProcessingException {
-        List<UserContract> response = new ArrayList();
-        Sort sort = Sort.by(Sort.Direction.DESC, new String[]{AuditTableAttribute.MODIFIED_DATE.label});
-        List<User> entities = this.repo.findAll(sort);
-        return objectMapper.readValue(this.objectMapper.writeValueAsString(response), new TypeReference<List<JsonNode>>() {});
-    }
 
+        List<UserContract> response = new ArrayList<>();
+        Sort sort = Sort.by(Sort.Direction.DESC, AuditTableAttribute.MODIFIED_DATE.label);
+        List<User> entities = this.repo.findAll(sort);
+
+        for (User user:entities){
+            RoleContract role=this.getUserRoles(user);
+            UserContract userContract = modelMapper.map(user,UserContract.class);
+            if (role != null){
+                userContract.setRole(role);
+            }
+            response.add(userContract);
+        }
+        return objectMapper.readValue(this.objectMapper.writeValueAsString(response), new TypeReference<>() {
+        });}
     public JsonNode findUserByUserId(String userId) throws ResourceNotFoundException {
-        User user = repo.findByUserId(UUID.fromString(userId)).orElseThrow(() -> {
-          return new ResourceNotFoundException("User not found on id: " + userId);
-        });
-        Role roles = this.getUserRoles(user);
+        User user = repo.findByUserId(UUID.fromString(userId)).orElseThrow(
+                () -> new ResourceNotFoundException("User not found on id: " + userId));
+        RoleContract role = this.getUserRoles(user);
         UserContract userContract = this.modelMapper.map(user, UserContract.class);
-        userContract.setRole(roles);
+        if (role != null){
+            userContract.setRole(role);
+        }
         return this.objectMapper.valueToTree(userContract);
     }
 
     public List<JsonNode> findUsersWithPredicate(String keywords, String sortOn, String sortOrder) throws JsonProcessingException {
-        return this.objectMapper.readValue(this.objectMapper.writeValueAsString(new ArrayList<>()), new TypeReference<List<JsonNode>>() {
+        return this.objectMapper.readValue(this.objectMapper.writeValueAsString(new ArrayList<>()), new TypeReference<>() {
         });
     }
 
     public JsonNode updateUser(String userId, UserContract updateContract) throws ResourceNotFoundException, InvalidRequestException {
         log.info("Update user [{}].", updateContract.toString());
-        User entity = repo.findByUserId(UUID.randomUUID()).orElseThrow(() -> {
-            return new ResourceNotFoundException("User not found on id: " + userId);
-        });
+        User entity = repo.findByUserId(UUID.randomUUID()).orElseThrow(
+                () -> new ResourceNotFoundException("User not found on id: " + userId));
         if (updateContract.getPassword() != null && updateContract.getPassword().length() < 20) {
             log.warn("Password should contain 20 or more than 20 characters");
             throw new InvalidRequestException("Password should contain 20 or more than 20 characters");
@@ -115,17 +125,13 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidRequestException("Update user error: " + entity);
             }
 
-            Role savedRoles = this.getUserRoles(updatedEntity);
-            UserContract updatedUserContract = (UserContract)this.modelMapper.map(updatedEntity, UserContract.class);
-            updatedUserContract.setRole(savedRoles);
-            return this.objectMapper.valueToTree(updatedUserContract);
+            UserContract userContract = this.modelMapper.map(updatedEntity, UserContract.class);
+            return this.objectMapper.valueToTree(userContract);
         }
     }
 
     public JsonNode deleteUser(String userId) throws InvalidRequestException, ResourceNotFoundException {
-        User entity = repo.findByUserId(UUID.fromString(userId)).orElseThrow(() -> {
-            return new ResourceNotFoundException("User not found on id: " + userId);
-        });
+        User entity = repo.findByUserId(UUID.fromString(userId)).orElseThrow(() -> new ResourceNotFoundException("User not found on id: " + userId));
         try {
             this.repo.delete(entity);
             log.info("User deleted for id [{}]", userId);
@@ -136,47 +142,14 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    protected Role getUserRoles(User user) {
+    protected RoleContract getUserRoles(User user) {
         UserRole userRole= userRoleRepo.findByUserName(user.getUserName());
-        Role role = roleRepo.findByroleName(userRole.getRoleName());
-        return role;
+        RoleContract roleContract = null;
+        if (userRole!=null){
+            Role role= roleRepo.findByRoleName(userRole.getRoleName());
+            modelMapper.map(role,RoleContract.class);
+        }
+        return roleContract;
     }
-
-    protected void assignUserRole(User user,Role role) {
-        UserRole userRole = this.userRoleRepo.findByUserName(user.getUserName());
-        userRoleRepo.delete(userRole);
-//
-//        Role role = roleRepo.findByroleName(role.getRoleName());
-//
-//        this.userRoleRepo.save(updatedRoles);
-    }
-
-//    protected List<UserRole> assignGeneralRole(User user) {
-//        List<UserRole> userRole = new ArrayList();
-//        if (this.userRoleRepo.findByUserId(user.getUserId()).isEmpty()) {
-//            Role generalRole = (Role)this.roleRepo.findByRoleNameAndContextId("General User", user.getContextId()).orElse((Object)null);
-//            if (generalRole != null) {
-//                UserRole role = new UserRole();
-//                role.setId((UUID)null);
-//                role.setRoleId(generalRole.getId());
-//                role.setUserId(user.getUserId());
-//                role.setContextId(user.getContextId());
-//                ((List)userRole).add(role);
-//                Iterator var5 = ((List)userRole).iterator();
-//
-//                while(var5.hasNext()) {
-//                    UserRole roles = (UserRole)var5.next();
-//                    this.userRoleRepo.save(roles);
-//                }
-//            }
-//        } else {
-//            userRole = this.userRoleRepo.findByUserId(user.getUserId());
-//        }
-//
-//        return (List)userRole;
-//    }
-//
-//
-//}
 
 }

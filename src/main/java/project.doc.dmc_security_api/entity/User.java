@@ -1,13 +1,18 @@
 package project.doc.dmc_security_api.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Column;
 import lombok.Data;
-import org.springframework.data.domain.Auditable;
+import lombok.EqualsAndHashCode;
 import project.doc.dmc_security_api.constants.AuditTable;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
 @Table(name = "user", schema = "user_management")
