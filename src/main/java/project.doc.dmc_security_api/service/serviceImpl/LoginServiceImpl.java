@@ -235,6 +235,8 @@ public class LoginServiceImpl implements LoginService {
         userProfileData.setUserName(validatedUser.getUserName());
         userProfileData.setFirstName(validatedUser.getFirstName());
         userProfileData.setLastName(validatedUser.getLastName());
+        userProfileData.setEmail(validatedUser.getEmail());
+
         if (jwt == null) {
             log.info("secret key before JWT" + jwtSecretId);
             jwt = generateUserJwt(validatedUser, userProfileData, jwtSecretId);
