@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authc.credential.PasswordService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -36,13 +37,15 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepo;
     private final UserRoleRepository userRoleRepo;
     private final ModelMapper modelMapper;
+    private PasswordService passwordService;
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,PasswordService passwordService,
                            UserRoleRepository userRoleRepository,ModelMapper modelMapper,ObjectMapper objectMapper){
         this.repo=userRepository;
         this.roleRepo=roleRepository;
+        this.passwordService= passwordService;
         this.userRoleRepo=userRoleRepository;
         this.modelMapper=modelMapper;
         this.objectMapper=objectMapper;
@@ -50,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
     public JsonNode saveUser(UserContract contract) throws InvalidRequestException {
         User entity = this.modelMapper.map(contract, User.class);
-        entity.setPassword(contract.getPassword());
+        entity.setPassword(passwordService.encryptPassword(contract.getPassword()));
         entity.setIsActive(true);
         entity.setCreatedDate(LocalDateTime.now());
         entity.setModifiedDate(LocalDateTime.now());
@@ -69,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
     }
 
-    public List<JsonNode> findUsers() throws JsonProcessingException {
+    public List<JsonNode> findUsers() throws JsonProcessingException, ResourceNotFoundException {
 
         List<UserContract> response = new ArrayList<>();
         Sort sort = Sort.by(Sort.Direction.DESC, AuditTableAttribute.MODIFIED_DATE.label);
@@ -142,11 +145,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    protected RoleContract getUserRoles(User user) {
+    protected RoleContract getUserRoles(User user) throws ResourceNotFoundException {
         UserRole userRole= userRoleRepo.findByUserName(user.getUserName());
         RoleContract roleContract = null;
         if (userRole!=null){
-            Role role= roleRepo.findByRoleName(userRole.getRoleName());
+            Role role= roleRepo.findByRoleName(userRole.getRoleName()).orElseThrow(
+                    ()-> new ResourceNotFoundException("Role not found"));
             modelMapper.map(role,RoleContract.class);
         }
         return roleContract;

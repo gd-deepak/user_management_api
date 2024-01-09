@@ -23,6 +23,7 @@ import project.doc.dmc_security_api.repo.RoleRepository;
 import project.doc.dmc_security_api.service.RoleService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,9 +77,9 @@ public class RoleServiceImpl implements RoleService {
         Role role = repo.findByRoleId(UUID.fromString(roleId)).orElseThrow(() -> {
             return new ResourceNotFoundException("role not found on id: " + roleId);
         });
-        Permission permissions = this.getRolePermissions(role);
+       List <String> permissions = this.getRolePermissions(role);
         RoleContract roleContract = this.modelMapper.map(role, RoleContract.class);
-        roleContract.setPermission(permissions);
+        roleContract.setPermissions(permissions);
         return this.objectMapper.valueToTree(roleContract);
     }
 
@@ -125,12 +126,15 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
-    protected Permission getRolePermissions(Role role) {
-        RolePermission rolePermission = rolePermissionRepo.findByRoleName(role.getRoleName());
-        Permission permission=null;
-        if (rolePermission !=null) {
-            permission = permissionRepo.findByPermissionName(rolePermission.getRoleName());
+    protected List <String> getRolePermissions(Role role) {
+        List <RolePermission> rolePermissions = rolePermissionRepo.findByRoleName(role.getRoleName());
+        List<String> permissions=new ArrayList<>();
+        if (!rolePermissions.isEmpty()) {
+            for (RolePermission entity : rolePermissions) {
+                Permission permission=permissionRepo.findByPermissionName(entity.getRoleName());
+                permissions.add(permission.getPermissionName());
+            }
         }
-        return permission;
+        return permissions;
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface UserService {
     JsonNode saveUser(UserContract contract) throws InvalidRequestException;
-    List<JsonNode> findUsers() throws JsonProcessingException;
+    List<JsonNode> findUsers() throws JsonProcessingException, ResourceNotFoundException;
     JsonNode findUserByUserId(String userId) throws ResourceNotFoundException;
     List<JsonNode> findUsersWithPredicate(String keywords, String sortOn, String sortOrder) throws JsonProcessingException;
     JsonNode updateUser(String userId, UserContract updateContract) throws ResourceNotFoundException, InvalidRequestException;

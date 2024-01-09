@@ -65,7 +65,7 @@ public class UserController {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Success|OK"),
             @ApiResponse(code = 204, message = "No Content"),
             @ApiResponse(code = 404, message = "Not Found")})
-    public ResponseEntity<List<JsonNode>> getUsers() throws JsonProcessingException {
+    public ResponseEntity<List<JsonNode>> getUsers() throws JsonProcessingException, ResourceNotFoundException {
         log.info("Get list of users");
 
         return new ResponseEntity<>(service.findUsers(), HttpStatus.OK);
